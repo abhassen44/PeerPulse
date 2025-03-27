@@ -1,5 +1,7 @@
 package frontend;
 
+import javax.swing.*;
+
 public class Main implements frontend.ActionListener
 {
 	DisplayFrame displayFrame;
@@ -64,6 +66,11 @@ public class Main implements frontend.ActionListener
 		this.displayFrame.add(homePanel);
 		displayFrame.revalidate(); // Why do I have to revalidate image here, but not all other components everywhere else?
 		this.displayFrame.repaint();
+	}
+
+	void showDialogBox(String message)
+	{
+		JOptionPane.showMessageDialog(this.displayFrame, message);
 	}
 
 	@Override
@@ -178,6 +185,11 @@ public class Main implements frontend.ActionListener
 		else if (action.equals("next"))
 		{
 			System.out.println("next");
+		}
+		else if (action.equals("deleteAccount"))
+		{
+			System.out.println("deleteAccount");
+			showDialogBox("Do you want to delete your account?");
 		}
 	}
 }
