@@ -1,0 +1,23 @@
+/PeerPulse-main
+ ├── backend                      # Backend server (Java with JDBC)
+ │       ├── src
+ │       │      ├── dao               # Database operations
+ │       │      ├── models            # Data models
+ │       │      ├── services          # Business logic
+ │       │      ├── Server.java       # REST-like server for communication
+ │       │      ├── Main.java         # Main entry point
+ │       │      └── DBConnection.java # MySQL connection handler
+ │       └── pom.xml / build.gradle   # Dependencies and build config
+ │
+ ├── frontend                     # Java Swing UI client
+ │       ├── src
+ │       │      ├── ui                 # Swing UI panels
+ │       │      │       ├── LogInPanel.java
+ │       │      │       ├── HomePanel.java
+ │       │      │       ├── YourProfilePanel.java
+ │       │      │       ├── DisplayFrame.java
+ │       │      │       └── VotePanel.java
+ │       │      ├── Main.java          # Main entry point
+ │       │      └── Client.java        # Communication with backend
+ │       └── pom.xml / build.gradle    # Dependencies and build config
+ └── README.md
