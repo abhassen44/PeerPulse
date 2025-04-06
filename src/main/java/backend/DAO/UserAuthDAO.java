@@ -10,7 +10,7 @@ public class UserAuthDAO
 {
 	private static final String URL = "jdbc:mysql://localhost:3306/peerpulse";
 	private static final String USERNAME = "root";
-	private static final String PASSWORD = "your_password";
+	private static final String PASSWORD = "anvesh20";
 
 	private Connection getConnection()
 	{

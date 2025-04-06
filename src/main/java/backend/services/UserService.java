@@ -6,6 +6,7 @@ import backend.DAO.UserDAO;
 import backend.models.Transactions;
 import backend.models.User;
 import backend.models.UserAuth;
+import backend.session.SessionManager;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -18,8 +19,29 @@ public class UserService
 
 	public String login(String username, String password)
 	{
-		boolean valid = userDAO.validateCredentials(username, password);
-		return valid ? "SUCCESS|Login successful" : "ERROR|Invalid credentials";
+		if (SessionManager.isLoggedIn(username))
+		{
+			return "ERROR|User already logged in";
+		}
+
+		try
+		{
+			if (userDAO.validateCredentials(username, password))
+			{
+				SessionManager.login(username);
+				return "SUCCESS|Login successful";
+			}
+			else
+			{
+				return "ERROR|Invalid credentials";
+			}
+		}
+		catch (SQLException e)
+		{
+			System.err.println("Error validating credentials: " + e.getMessage());
+			e.printStackTrace();
+			return "ERROR|Login failed";
+		}
 	}
 
 	public String register(String username, String password, String name, Date dob, String university, char sex, String securityQuestion, String securityAnswer)
@@ -30,6 +52,7 @@ public class UserService
 		{
 			userDAO.insert(user);
 			userAuthDAO.insert(userAuth);
+			userDAO.incrementUniversityStudentCount(university); // Increment university student count
 			return "SUCCESS|Registration successful";
 		}
 		catch (SQLException e)
@@ -42,6 +65,15 @@ public class UserService
 
 	public String upvote(String sender, String receiver)
 	{
+		if (!userDAO.isUserNameExists(sender))
+		{
+			return "ERROR|Sender does not exist";
+		}
+		if (!userDAO.isUserNameExists(receiver))
+		{
+			return "ERROR|Receiver does not exist";
+		}
+
 		try
 		{
 			userDAO.updateLikes(receiver, 1);
@@ -57,6 +89,15 @@ public class UserService
 
 	public String downvote(String sender, String receiver)
 	{
+		if (!userDAO.isUserNameExists(sender))
+		{
+			return "ERROR|Sender does not exist";
+		}
+		if (!userDAO.isUserNameExists(receiver))
+		{
+			return "ERROR|Receiver does not exist";
+		}
+
 		try
 		{
 			userDAO.updateLikes(receiver, -1);

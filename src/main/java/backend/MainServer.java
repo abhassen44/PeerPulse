@@ -2,10 +2,12 @@ package backend;
 
 import java.net.*;
 import java.io.*;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Date;
 import backend.services.UserService;
+import backend.session.SessionManager;
 
 public class MainServer
 {
@@ -100,7 +102,40 @@ public class MainServer
 							response = "ERROR|Invalid UPVOTE format";
 							break;
 						}
+
+						if (!SessionManager.isLoggedIn(parts[1]))
+						{
+							response = "ERROR|Session expired. Please log in again.";
+							break;
+						}
+
 						response = userService.upvote(parts[1], parts[2]);
+						break;
+
+					case "DOWNVOTE":
+						if (parts.length < 3)
+						{
+							response = "ERROR|Invalid DOWNVOTE format";
+							break;
+						}
+
+						if (!SessionManager.isLoggedIn(parts[1]))
+						{
+							response = "ERROR|Session expired. Please log in again.";
+							break;
+						}
+
+						response = userService.downvote(parts[1], parts[2]);
+						break;
+
+					case "LOGOUT":
+						if (parts.length < 2)
+						{
+							response = "ERROR|Invalid LOGOUT format";
+							break;
+						}
+						SessionManager.logout(parts[1]);
+						response = "SUCCESS|Logged out";
 						break;
 
 					default:
@@ -110,7 +145,8 @@ public class MainServer
 
 				out.println(response);
 			}
-		} catch (IOException e) {
+		} catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 	}

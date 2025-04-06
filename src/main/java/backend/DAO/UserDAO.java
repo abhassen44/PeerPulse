@@ -1,6 +1,8 @@
 package backend.DAO;
 
+import backend.models.University;
 import backend.models.User;
+import backend.DAO.UniversityDAO;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +12,7 @@ public class UserDAO
 {
 	private static final String URL = "jdbc:mysql://localhost:3306/peerpulse";
 	private static final String USERNAME = "root";
-	private static final String PASSWORD = "your_password";
+	private static final String PASSWORD = "anvesh20";
 
 	private Connection getConnection()
 	{
@@ -162,29 +164,64 @@ public class UserDAO
 		}
 	}
 
-	public boolean validateCredentials(String username, String password)
+	public boolean validateCredentials(String username, String password) throws SQLException
 	{
-		String sql = "SELECT * FROM user WHERE username = ? AND password = ?";
-		boolean isValid = false;
-
-		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
-		{
-			stmt.setString(1, username);
-			stmt.setString(2, password);
-			ResultSet rs = stmt.executeQuery();
-
-			if (rs.next())
-			{
-				isValid = true;
-			}
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-
-		return isValid;
+		return new UserAuthDAO().validateCredentials(username, password);
 	}
 
 
+	public void incrementUniversityStudentCount(String university)
+	{
+		UniversityDAO universityDAO = new UniversityDAO();
+		University uni = universityDAO.findByName(university);
+		if (uni != null)
+		{
+			int newCount = uni.getStudents() + 1;
+			uni.setStudents(newCount);
+			universityDAO.update(uni);
+		}
+		else
+		{
+			System.out.println("University not found: " + university);
+		}
+	}
+
+	public void decrementUniversityStudentCount(String university)
+	{
+		UniversityDAO universityDAO = new UniversityDAO();
+		University uni = universityDAO.findByName(university);
+		if (uni != null)
+		{
+			int newCount = uni.getStudents() - 1;
+			uni.setStudents(newCount);
+			universityDAO.update(uni);
+		}
+		else
+		{
+			System.out.println("University not found: " + university);
+		}
+	}
+
+	public boolean isUsernameTaken(String username)
+	{
+		String sql = "SELECT COUNT(*) FROM user WHERE username = ?";
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, username);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next())
+			{
+				return rs.getInt(1) > 0;
+			}
+		} catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public boolean isUserNameExists(String username)
+	{
+		return isUsernameTaken(username);
+	}
 }
