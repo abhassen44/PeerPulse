@@ -162,4 +162,27 @@ public class UserDAO
 		}
 	}
 
+	public boolean validateCredentials(String username, String password)
+	{
+		String sql = "SELECT * FROM user WHERE username = ? AND password = ?";
+		boolean isValid = false;
+
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, username);
+			stmt.setString(2, password);
+			ResultSet rs = stmt.executeQuery();
+
+			if (rs.next())
+			{
+				isValid = true;
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+
+		return isValid;
+	}
 }

@@ -16,7 +16,7 @@ public class MainServer
 			while (true)
 			{
 				Socket clientSocket = serverSocket.accept();
-				new Thread(() -> handleClient(clientSocket)).start()
+				new Thread(() -> handleClient(clientSocket)).start();
 			}
 		}
 		catch (IOException e)
