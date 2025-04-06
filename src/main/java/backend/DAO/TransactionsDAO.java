@@ -17,7 +17,7 @@ public class TransactionsDAO
 
 	public void insert(Transactions transaction)
 	{
-		String sql = "INSERT INTO transaction (sender, receiver, amount, date) VALUES (?, ?, ?, ?)";
+		String sql = "INSERT INTO transactions (sender, receiver, amount, date) VALUES (?, ?, ?, ?)";
 
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
@@ -37,7 +37,7 @@ public class TransactionsDAO
 
 	public void delete(String sender, String receiver)
 	{
-		String sql = "DELETE FROM transaction WHERE sender = ? AND receiver = ?";
+		String sql = "DELETE FROM transactions WHERE sender = ? AND receiver = ?";
 
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
@@ -54,7 +54,7 @@ public class TransactionsDAO
 
 	public void update(Transactions transaction)
 	{
-		String sql = "UPDATE transaction SET amount = ? WHERE sender = ? AND receiver = ?";
+		String sql = "UPDATE transactions SET amount = ? WHERE sender = ? AND receiver = ?";
 
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
@@ -72,7 +72,7 @@ public class TransactionsDAO
 
 	public Transactions findTransaction(String sender, String receiver)
 	{
-		String sql = "SELECT * FROM transaction WHERE sender = ? AND receiver = ?";
+		String sql = "SELECT * FROM transactions WHERE sender = ? AND receiver = ?";
 		Transactions transaction = null;
 
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
