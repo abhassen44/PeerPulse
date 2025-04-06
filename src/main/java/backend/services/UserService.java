@@ -76,8 +76,30 @@ public class UserService
 
 		try
 		{
-			userDAO.updateLikes(receiver, 1);
-			transactionsDAO.insert(new Transactions(sender, receiver, 1, new Date()));
+			if (sender.equals(receiver))
+			{
+				return "ERROR|Cannot upvote yourself";
+			}
+			if (!transactionsDAO.hasTransaction(sender, receiver))
+			{
+				userDAO.updateLikes(receiver, 1);
+				transactionsDAO.insert(new Transactions(sender, receiver, 1, new Date()));
+			}
+			else
+			{
+				Transactions t = transactionsDAO.findTransaction(sender, receiver);
+				if (t.getAmount() == 1)
+				{
+					return "ERROR|Already upvoted";
+				}
+				else if (t.getAmount() == -1)
+				{
+					userDAO.updateLikes(receiver, 2);
+					t.setAmount(t.getAmount() + 1);
+					t.setDate(new Date());
+					transactionsDAO.update(t);
+				}
+			}
 			return "SUCCESS|Upvote recorded";
 		}
 		catch (Exception e)
@@ -100,14 +122,92 @@ public class UserService
 
 		try
 		{
-			userDAO.updateLikes(receiver, -1);
-			transactionsDAO.insert(new Transactions(sender, receiver, -1, new Date()));
+			if (sender.equals(receiver))
+			{
+				return "ERROR|Cannot downvote yourself";
+			}
+			if (!transactionsDAO.hasTransaction(sender, receiver))
+			{
+				userDAO.updateLikes(receiver, -1);
+				transactionsDAO.insert(new Transactions(sender, receiver, -1, new Date()));
+			}
+			else
+			{
+				Transactions t = transactionsDAO.findTransaction(sender, receiver);
+				if (t.getAmount() == -1)
+				{
+					return "ERROR|Already downvoted";
+				}
+				else if (t.getAmount() == 1)
+				{
+					userDAO.updateLikes(receiver, -2);
+					t.setAmount(t.getAmount() - 1);
+					t.setDate(new Date());
+					transactionsDAO.update(t);
+				}
+			}
 			return "SUCCESS|Downvote recorded";
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 			return "ERROR|Downvote failed";
+		}
+	}
+
+	public String getProfile(String username)
+	{
+		try
+		{
+			User user = userDAO.findByUsername(username);
+			if (user == null)
+			{
+				return "ERROR|User not found";
+			}
+
+			return String.join("|",
+					"SUCCESS",
+					user.getUsername(),
+					user.getName(),
+					user.getDateOfBirth().toString(),
+					user.getUniversity(),
+					String.valueOf(user.getLikes()),
+					String.valueOf(user.getSex()),
+					user.getDateJoined().toString()
+			);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return "ERROR|Could not retrieve user profile";
+		}
+	}
+
+	public String getRandomProfile()
+	{
+		try
+		{
+			User user = userDAO.getRandomUser();
+			if (user == null)
+			{
+				return "ERROR|No random user found";
+			}
+
+			return String.join("|",
+					"SUCCESS",
+					user.getUsername(),
+					user.getName(),
+					user.getDateOfBirth().toString(),
+					user.getUniversity(),
+					String.valueOf(user.getLikes()),
+					String.valueOf(user.getSex()),
+					user.getDateJoined().toString()
+			);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return "ERROR|Could not retrieve random user profile";
 		}
 	}
 }

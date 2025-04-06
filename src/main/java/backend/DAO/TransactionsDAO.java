@@ -98,4 +98,9 @@ public class TransactionsDAO
 
 		return transaction;
 	}
+
+	public boolean hasTransaction(String sender, String receiver)
+	{
+		return findTransaction(sender, receiver) != null;
+	}
 }

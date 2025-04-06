@@ -3,6 +3,7 @@ package backend.DAO;
 import backend.models.University;
 import backend.models.User;
 import backend.DAO.UniversityDAO;
+import com.mysql.cj.exceptions.ConnectionIsClosedException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -164,6 +165,25 @@ public class UserDAO
 		}
 	}
 
+	public void updateLikesValue(String username, int likes) throws SQLException
+	{
+		String sql = "UPDATE user SET likes = ? WHERE username = ?";
+
+		try (Connection conn = getConnection();
+			 PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+
+			stmt.setInt(1, likes);
+			stmt.setString(2, username);
+
+			stmt.executeUpdate();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	public boolean validateCredentials(String username, String password) throws SQLException
 	{
 		return new UserAuthDAO().validateCredentials(username, password);
@@ -223,5 +243,42 @@ public class UserDAO
 	public boolean isUserNameExists(String username)
 	{
 		return isUsernameTaken(username);
+	}
+
+	public User getRandomUser()
+	{
+		String sql = "SELECT * FROM user ORDER BY RAND() LIMIT 1";
+		User user = null;
+		try (Connection conn = getConnection(); Statement stmt = conn.createStatement())
+		{
+			ResultSet rs = stmt.executeQuery(sql);
+
+			if (rs.next())
+			{
+				user = new User(rs.getString("username"), rs.getString("name"), rs.getDate("date_of_birth"), rs.getString("university"), rs.getInt("likes"), rs.getString("Sex").charAt(0), rs.getDate("date_joined"));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return user;
+	}
+
+	public int getUserCount()
+	{
+		String sql = "SELECT COUNT(*) FROM user";
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next())
+			{
+				return rs.getInt(1);
+			}
+		} catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return 0;
 	}
 }

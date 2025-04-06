@@ -102,13 +102,11 @@ public class MainServer
 							response = "ERROR|Invalid UPVOTE format";
 							break;
 						}
-
 						if (!SessionManager.isLoggedIn(parts[1]))
 						{
 							response = "ERROR|Session expired. Please log in again.";
 							break;
 						}
-
 						response = userService.upvote(parts[1], parts[2]);
 						break;
 
@@ -118,13 +116,11 @@ public class MainServer
 							response = "ERROR|Invalid DOWNVOTE format";
 							break;
 						}
-
 						if (!SessionManager.isLoggedIn(parts[1]))
 						{
 							response = "ERROR|Session expired. Please log in again.";
 							break;
 						}
-
 						response = userService.downvote(parts[1], parts[2]);
 						break;
 
@@ -136,6 +132,23 @@ public class MainServer
 						}
 						SessionManager.logout(parts[1]);
 						response = "SUCCESS|Logged out";
+						break;
+
+					case "GET_PROFILE":
+					if (parts.length < 2) {
+						response = "ERROR|Missing username";
+						break;
+					}
+					String profileUser = parts[1];
+					if (!SessionManager.isLoggedIn(profileUser)) {
+						response = "ERROR|Session expired. Please log in again.";
+						break;
+					}
+					response = userService.getProfile(profileUser);
+					break;
+
+					case "GET_RANDOM_PROFILE":
+						response = userService.getRandomProfile();
 						break;
 
 					default:
