@@ -4,6 +4,8 @@ import backend.models.Log;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +31,9 @@ public class LogDAO
 
 	public void insert(Log log)
 	{
-		String sql = "INSERT INTO logs (username, action, date) VALUES (?, ?, ?)";
+		String sql = "INSERT INTO log (username, action, date) VALUES (?, ?, ?)";
 
-		try (Connection conn = getConnection(); var stmt = conn.prepareStatement(sql))
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
 			stmt.setString(1, log.getUsername());
 			stmt.setString(2, log.getAction());
@@ -48,9 +50,9 @@ public class LogDAO
 
 	public void delete(String username)
 	{
-		String sql = "DELETE FROM logs WHERE username = ?";
+		String sql = "DELETE FROM log WHERE username = ?";
 
-		try (Connection conn = getConnection(); var stmt = conn.prepareStatement(sql))
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
 			stmt.setString(1, username);
 			stmt.executeUpdate();
@@ -64,13 +66,13 @@ public class LogDAO
 
 	public List<Log> findByUsername(String username)
 	{
-		String sql = "SELECT * FROM logs WHERE username = ?";
+		String sql = "SELECT * FROM log WHERE username = ?";
 		List<Log> logs = new ArrayList<>();
 
-		try (Connection conn = getConnection(); var stmt = conn.prepareStatement(sql))
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
 			stmt.setString(1, username);
-			var rs = stmt.executeQuery();
+			ResultSet rs = stmt.executeQuery();
 
 			while (rs.next())
 			{
