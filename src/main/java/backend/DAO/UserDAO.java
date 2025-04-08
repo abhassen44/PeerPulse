@@ -281,4 +281,27 @@ public class UserDAO
 		}
 		return 0;
 	}
+
+	public User getRandomUserByUniversity(String university)
+	{
+		String sql = "SELECT * FROM user WHERE university = ? ORDER BY RAND() LIMIT 1";
+		User user = null;
+
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, university);
+			ResultSet rs = stmt.executeQuery(sql);
+
+			if (rs.next())
+			{
+				user = new User(rs.getString("username"), rs.getString("name"), rs.getDate("date_of_birth"), rs.getString("university"), rs.getInt("likes"), rs.getString("sex").charAt(0), rs.getDate("date_joined"));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return user;
+	}
 }

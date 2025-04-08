@@ -210,4 +210,32 @@ public class UserService
 			return "ERROR|Could not retrieve random user profile";
 		}
 	}
+
+	public String getRandomUserByUniversity(String university)
+	{
+		try
+		{
+			User user = userDAO.getRandomUserByUniversity(university);
+			if (user == null)
+			{
+				return "ERROR|No user found for the specified university";
+			}
+
+			return String.join("|",
+					"SUCCESS",
+					user.getUsername(),
+					user.getName(),
+					user.getDateOfBirth().toString(),
+					user.getUniversity(),
+					String.valueOf(user.getLikes()),
+					String.valueOf(user.getSex()),
+					user.getDateJoined().toString()
+			);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return "ERROR|Could not retrieve user by university";
+		}
+	}
 }

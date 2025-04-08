@@ -46,4 +46,14 @@ public class UniversityService
 		universityDAO.delete(universityName);
 		return "SUCCESS|University deleted successfully";
 	}
+
+	public String getUniversity(String universityName)
+	{
+		University uni = universityDAO.findByName(universityName);
+		if (uni == null)
+		{
+			return "ERROR|University not found";
+		}
+		return "SUCCESS|" + uni.toString();
+	}
 }
