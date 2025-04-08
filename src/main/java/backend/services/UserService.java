@@ -19,7 +19,7 @@ public class UserService
 
 	public String login(String username, String password)
 	{
-		if (SessionManager.isLoggedIn(username))
+		if (SessionManager.isAuthorized(username))
 		{
 			return "ERROR|User already logged in";
 		}

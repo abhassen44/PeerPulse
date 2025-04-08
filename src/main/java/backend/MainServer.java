@@ -102,7 +102,7 @@ public class MainServer
 							response = "ERROR|Invalid UPVOTE format";
 							break;
 						}
-						if (!SessionManager.isLoggedIn(parts[1]))
+						if (!SessionManager.isAuthorized(parts[1]))
 						{
 							response = "ERROR|Session expired. Please log in again.";
 							break;
@@ -116,7 +116,7 @@ public class MainServer
 							response = "ERROR|Invalid DOWNVOTE format";
 							break;
 						}
-						if (!SessionManager.isLoggedIn(parts[1]))
+						if (!SessionManager.isAuthorized(parts[1]))
 						{
 							response = "ERROR|Session expired. Please log in again.";
 							break;
@@ -140,7 +140,7 @@ public class MainServer
 						break;
 					}
 					String profileUser = parts[1];
-					if (!SessionManager.isLoggedIn(profileUser)) {
+					if (!SessionManager.isAuthorized(profileUser)) {
 						response = "ERROR|Session expired. Please log in again.";
 						break;
 					}
