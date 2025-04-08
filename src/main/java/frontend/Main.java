@@ -10,6 +10,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.UUID;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 public class Main implements frontend.ActionListener
 {
 	DisplayFrame displayFrame;
@@ -34,14 +37,25 @@ public class Main implements frontend.ActionListener
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new java.io.InputStreamReader(socket.getInputStream()));
 			System.out.println("Connected to server at " + hostname + ":" + port);
+
+			this.displayFrame = new DisplayFrame();
+			showLoginPanel();
+
+			// Add WindowListener to handle logout on exit
+			displayFrame.addWindowListener(new WindowAdapter()
+			{
+				@Override
+				public void windowClosing(WindowEvent e)
+				{
+					logoutOnExit();
+				}
+			});
 		}
 		catch (Exception e)
 		{
 			System.err.println("Could not connect to server or an I/O error occurred: " + e.getMessage());
 			System.exit(1);
 		}
-		this.displayFrame = new DisplayFrame();
-		showLoginPanel();
 	}
 	public static void main(String[] args)
 	{
@@ -158,6 +172,50 @@ public class Main implements frontend.ActionListener
 		{
 			System.out.println("Navigate Forgot Password");
 			showForgotPasswordPanel();
+		}
+		else if (action.equals("next"))
+		{
+			System.out.println("next");
+			showHomePanel(); // Refresh with next profile
+		}
+		else if (action.equals("exit"))
+		{
+			System.out.println("exit");
+			logoutOnExit();
+			System.exit(0);
+		}
+		else if (action.equals("deleteAccount"))
+		{
+			System.out.println("deleteAccount");
+			showDialogBox("Do you want to delete your account?");
+			out.println("DELETE_ACCOUNT|" + currentSessionUserName + currentHashedPassword);
+			String serverResponse = null;
+			try
+			{
+				serverResponse = in.readLine();
+			}
+			catch (IOException e)
+			{
+				System.out.println("Could not read server response: " + e.getMessage());
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("Server response: " + serverResponse);
+			String[] parts = serverResponse.split("\\|");
+			if (parts[0].equals("ERROR"))
+			{
+				showErrorMessagePanel(parts[1]);
+			}
+			else if (parts[0].equals("SUCCESS"))
+			{
+				System.out.println("Account deleted successfully");
+				showDialogBox("Account deleted successfully");
+				showLoginPanel(); // Redirect to login page
+			}
+		}
+		else
+		{
+			System.out.println("Unknown action: " + action);
 		}
 	}
 
@@ -278,7 +336,7 @@ public class Main implements frontend.ActionListener
 			if (parts[0].equals("ERROR"))
 			{
 				// Check if the error is due to upvoting oneself
-				if (parts[1].equals("Cannot upvote yourself"))
+				if (parts[1].equals("Cannot upvote yourself") || parts[1].equals("Already upvoted"))
 				{
 					showDialogBox(parts[1]); // Show the error in a dialog box
 				} else
@@ -313,7 +371,7 @@ public class Main implements frontend.ActionListener
 			if (parts[0].equals("ERROR"))
 			{
 				// Check if the error is due to downvoting oneself
-				if (parts[1].equals("Cannot downvote yourself"))
+				if (parts[1].equals("Cannot downvote yourself") || parts[1].equals("Already downvoted"))
 				{
 					showDialogBox(parts[1]); // Show the error in a dialog box
 				}
@@ -361,6 +419,44 @@ public class Main implements frontend.ActionListener
 				System.out.println("Account deleted successfully");
 				showDialogBox("Account deleted successfully");
 				showLoginPanel(); // Redirect to login page
+			}
+		}
+	}
+
+
+	private void logoutOnExit()
+	{
+		if (currentSessionUserName != null)
+		{
+			System.out.println("Logging out " + currentSessionUserName + " on exit");
+			out.println("LOGOUT|" + uuid + "|" + currentSessionUserName);
+			try
+			{
+				String serverResponse = in.readLine();
+				System.out.println("Server response: " + serverResponse);
+			} catch (IOException e)
+			{
+				System.out.println("Could not read server response: " + e.getMessage());
+				e.printStackTrace();
+			} finally
+			{
+				try
+				{
+					socket.close();
+				} catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+		else
+		{
+			try
+			{
+				socket.close();
+			} catch (IOException e)
+			{
+				e.printStackTrace();
 			}
 		}
 	}
