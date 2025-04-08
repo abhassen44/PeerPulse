@@ -28,8 +28,7 @@ public class UserService
 		{
 			if (userDAO.validateCredentials(username, password))
 			{
-				SessionManager.login(username);
-				return "SUCCESS|Login successful";
+				return "SUCCESS|Login successful|" + SessionManager.login(username);
 			}
 			else
 			{
@@ -95,7 +94,7 @@ public class UserService
 				else if (t.getAmount() == -1)
 				{
 					userDAO.updateLikes(receiver, 2);
-					t.setAmount(t.getAmount() + 1);
+					t.setAmount(t.getAmount() + 2);
 					t.setDate(new Date());
 					transactionsDAO.update(t);
 				}
@@ -141,7 +140,7 @@ public class UserService
 				else if (t.getAmount() == 1)
 				{
 					userDAO.updateLikes(receiver, -2);
-					t.setAmount(t.getAmount() - 1);
+					t.setAmount(t.getAmount() - 2);
 					t.setDate(new Date());
 					transactionsDAO.update(t);
 				}
@@ -211,11 +210,19 @@ public class UserService
 		}
 	}
 
-	public String getRandomUserByUniversity(String university)
+	public String getRandomUserSameUniversity(String username)
 	{
 		try
 		{
-			User user = userDAO.getRandomUserByUniversity(university);
+			String university;
+			User user = userDAO.findByUsername(username);
+			if (user == null)
+			{
+				return "ERROR|User not found";
+			}
+			university = user.getUniversity();
+
+			user = userDAO.getRandomUserByUniversity(university);
 			if (user == null)
 			{
 				return "ERROR|No user found for the specified university";
@@ -237,5 +244,11 @@ public class UserService
 			e.printStackTrace();
 			return "ERROR|Could not retrieve user by university";
 		}
+	}
+
+	public String logout(String username)
+	{
+		SessionManager.logout(username);
+		return "SUCCESS|Logout successful";
 	}
 }
