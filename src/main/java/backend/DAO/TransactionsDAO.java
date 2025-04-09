@@ -3,6 +3,8 @@ package backend.DAO;
 import backend.models.Transactions;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TransactionsDAO
 {
@@ -102,5 +104,66 @@ public class TransactionsDAO
 	public boolean hasTransaction(String sender, String receiver)
 	{
 		return findTransaction(sender, receiver) != null;
+	}
+
+	public List<Transactions> findTransactionsBySender(String sender)
+	{
+		String sql = "SELECT * FROM transactions WHERE sender = ?";
+		List<Transactions> transactions = new ArrayList<>();
+
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, sender);
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next())
+			{
+				transactions.add(new Transactions(
+						rs.getString("sender"),
+						rs.getString("receiver"),
+						rs.getInt("amount"),
+						rs.getDate("date")
+				));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return transactions;
+	}
+
+	public void deleteAllTransactionsBySender(String sender)
+	{
+		String sql = "DELETE FROM transactions WHERE sender = ?";
+
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, sender);
+			stmt.executeUpdate();
+			System.out.println("All transactions by sender " + sender + " deleted successfully");
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteAllTransactionsByUser(String username)
+	{
+		String sql = "DELETE FROM transactions WHERE sender = ? OR receiver = ?";
+
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
+		{
+			stmt.setString(1, username);
+			stmt.setString(2, username);
+			stmt.executeUpdate();
+			System.out.println("All transactions involving user " + username + " deleted successfully");
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

@@ -10,6 +10,7 @@ import backend.session.SessionManager;
 
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 
 public class UserService
 {
@@ -256,14 +257,58 @@ public class UserService
 	{
 		try
 		{
-			if (userAuthDAO.validateCredentials(username, password))
-				return "SUCCESS|Delete account successful";
-			else
+			if (!userAuthDAO.validateCredentials(username, password))
+			{
 				return "ERROR|Invalid credentials";
-		} catch (SQLException e)
+			}
+
+			// Get user's university before deletion for decrementing the count later
+			User user = userDAO.findByUsername(username);
+			if (user == null)
+			{
+				return "ERROR|User not found";
+			}
+			String university = user.getUniversity();
+
+			// 1. Find all transactions made by this user
+			List<Transactions> userTransactions = transactionsDAO.findTransactionsBySender(username);
+
+			// 2. Undo the effect of each transaction on the receivers' like counts
+			for (Transactions transaction : userTransactions)
+			{
+				// Reverse the effect of the transaction (multiply by -1)
+				try
+				{
+					userDAO.updateLikes(transaction.getReceiver(), -transaction.getAmount());
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+					return "ERROR|Failed to undo transaction effects";
+				}
+			}
+
+			// 3. Delete all transactions involving this user
+			transactionsDAO.deleteAllTransactionsByUser(username);
+
+			// 4. Delete the user auth record
+			userAuthDAO.delete(username);
+
+			// 5. Decrement university student count
+			userDAO.decrementUniversityStudentCount(university);
+
+			// 6. Delete the user record
+			userDAO.delete(username);
+
+			// 7. Log the user out if they're logged in
+			SessionManager.logout(username);
+
+			return "SUCCESS|Account deleted successfully";
+		}
+		catch (SQLException e)
 		{
 			e.printStackTrace();
+			return "ERROR|Could not delete account: " + e.getMessage();
 		}
-		return "ERROR|Could not delete account";
 	}
 }

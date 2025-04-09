@@ -302,7 +302,7 @@ public class Main implements frontend.ActionListener
 	public void onActionPerformed(String action, String username, String password)
 	{
 		System.out.println(action + " " + username + " " + password);
-		String hashedPassword = password; // TODO: Hash the password
+		String hashedPassword = hashPassword(password);
 		System.out.println("Hashed Password: " + hashedPassword);
 
 		if (action.equals("Log In"))
@@ -339,16 +339,10 @@ public class Main implements frontend.ActionListener
 	}
 
 	@Override
-	public void onActionPerformed(String action, String username, String password, String confirmPassword, String securityQuestion, String securityAnswer)
-	{
-
-	}
-
-	@Override
 	public void onActionPerformed(String action, String username, String password, String confirmPassword, String securityQuestion, String securityAnswer, String name, String dob, String university, String sex)
 	{
 		System.out.println(action + " " + username + " " + password + " " + confirmPassword + " " + securityQuestion + " " + securityAnswer);
-
+		String hashedPassword = hashPassword(password);
 		if (action.equals("Sign Up"))
 		{
 			System.out.println("Sign Up");
@@ -359,28 +353,7 @@ public class Main implements frontend.ActionListener
 				return;
 			}
 
-			out.println("REGISTER|" + username + "|" + password + "|" + name + "|" + dob + "|" + university + "|" + sex + "|" + securityQuestion + "|" + securityAnswer);
-
-			showLoginPanel();
-		}
-	}
-
-	@Override
-	public void onActionPerformed(String action, String username, String securityAnswer, String newPassword, String confirmPassword)
-	{
-		System.out.println(action + " " + username + " " + securityAnswer + " " + newPassword + " " + confirmPassword);
-
-		if (action.equals("Submit"))
-		{
-			System.out.println("Submit");
-
-			// check for username
-
-			// check for security answer
-
-			// check for password match
-
-			// update in database
+			out.println("REGISTER|" + username + "|" + hashedPassword + "|" + name + "|" + dob + "|" + university + "|" + sex + "|" + securityQuestion + "|" + securityAnswer);
 
 			showLoginPanel();
 		}
@@ -540,5 +513,3 @@ public class Main implements frontend.ActionListener
 		}
 	}
 }
-
-// TODO: upvote, downvote, logout, get profile requires token
