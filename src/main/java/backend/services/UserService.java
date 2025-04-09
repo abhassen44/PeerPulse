@@ -251,4 +251,19 @@ public class UserService
 		SessionManager.logout(username);
 		return "SUCCESS|Logout successful";
 	}
+
+	public String deleteAccount(String username, String password)
+	{
+		try
+		{
+			if (userAuthDAO.validateCredentials(username, password))
+				return "SUCCESS|Delete account successful";
+			else
+				return "ERROR|Invalid credentials";
+		} catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		return "ERROR|Could not delete account";
+	}
 }

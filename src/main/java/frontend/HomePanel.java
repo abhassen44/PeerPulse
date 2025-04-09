@@ -67,7 +67,17 @@ public class HomePanel extends JPanel
 		nextButton.setMaximumSize(new Dimension(150, 30));
 		nextButton.addActionListener(e -> actionListener.onActionPerformed("next"));
 		buttonPanel.add(nextButton);
-		
+
+		// Add "Delete My Profile" button at the bottom
+		JButton deleteProfileButton = new JButton("Delete My Profile");
+		deleteProfileButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+		deleteProfileButton.setMaximumSize(new Dimension(150, 30));
+		deleteProfileButton.setForeground(Color.RED);
+		deleteProfileButton.addActionListener(e -> actionListener.onActionPerformed("deleteProfile"));
+		buttonPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Add extra space
+		buttonPanel.add(deleteProfileButton);
+
+
 		// Create a container panel to hold both profileInfoPanel and buttonPanel
 		JPanel containerPanel = new JPanel();
 		containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.Y_AXIS));

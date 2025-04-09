@@ -19,7 +19,7 @@ public class CommandRouter {
 		String action = parts[0];
 
 		// Handle session validation for specific commands
-		if (action.equals("UPVOTE") || action.equals("DOWNVOTE") || action.equals("LOGOUT") || action.equals("GET_PROFILE")) {
+		if (action.equals("UPVOTE") || action.equals("DOWNVOTE") || action.equals("LOGOUT") || action.equals("GET_PROFILE") || action.equals("DELETE_ACCOUNT")) {
 			if (parts.length > 1 && !SessionManager.isAuthorized(parts[1])) {
 				return "ERROR|Session expired. Please log in again.";
 			}
@@ -55,6 +55,8 @@ public class CommandRouter {
 				return universityService.deleteUniversity(parts[1]);
 			case "LOGOUT":
 				return userService.logout(parts[2]);
+			case "DELETE_ACCOUNT":
+				return userService.deleteAccount(parts[2], parts[3]);
 			default:
 				return "ERROR|Unknown command";
 		}

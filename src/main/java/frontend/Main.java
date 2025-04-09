@@ -153,6 +153,30 @@ public class Main implements frontend.ActionListener
 		JOptionPane.showMessageDialog(this.displayFrame, message);
 	}
 
+	private String hashPassword(String password)
+	{
+		try
+		{
+			java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+			byte[] hash = md.digest(password.getBytes("UTF-8"));
+			StringBuilder hexString = new StringBuilder();
+
+			for (byte b : hash)
+			{
+				String hex = Integer.toHexString(0xff & b);
+				if (hex.length() == 1) hexString.append('0');
+				hexString.append(hex);
+			}
+
+			return hexString.toString();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	@Override
 	public void onActionPerformed(String action)
 	{
@@ -211,6 +235,61 @@ public class Main implements frontend.ActionListener
 				System.out.println("Account deleted successfully");
 				showDialogBox("Account deleted successfully");
 				showLoginPanel(); // Redirect to login page
+			}
+		}
+		else if (action.equals("deleteProfile"))
+		{
+			// Show password confirmation dialog
+			JPasswordField passwordField = new JPasswordField();
+			int option = JOptionPane.showConfirmDialog
+			(
+					displayFrame,
+					passwordField,
+					"Enter your password to confirm account deletion:",
+					JOptionPane.OK_CANCEL_OPTION,
+					JOptionPane.WARNING_MESSAGE
+			);
+
+			if (option == JOptionPane.OK_OPTION)
+			{
+				String password = new String(passwordField.getPassword());
+
+				// Hash the password (assuming you have the same hashing method used during login)
+				String hashedPassword = hashPassword(password);
+
+				// Send delete account request to server
+				out.println("DELETE_ACCOUNT|" + uuid + "|" + currentSessionUserName + "|" + hashedPassword);
+
+				try
+				{
+					String response = in.readLine();
+					System.out.println("Server response: " + response);
+
+					String[] parts = response.split("\\|");
+					if (parts[0].equals("SUCCESS"))
+					{
+						showDialogBox("Your account has been deleted successfully.");
+						showLoginPanel(); // Redirect to login page
+					}
+					else if (parts[0].equals("ERROR"))
+					{
+						if (parts[1].contains("password") || parts[1].contains("Password"))
+						{
+							// Password verification failed
+							showDialogBox("Incorrect password. Account deletion failed.");
+						}
+						else
+						{
+							// Session expired or other error
+							showErrorMessagePanel(parts[1]);
+						}
+					}
+				}
+				catch (IOException e)
+				{
+					System.out.println("Could not read server response: " + e.getMessage());
+					e.printStackTrace();
+				}
 			}
 		}
 		else
