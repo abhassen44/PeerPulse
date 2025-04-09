@@ -360,6 +360,46 @@ public class Main implements frontend.ActionListener
 	}
 
 	@Override
+	public void onActionPerformed(String action, String username, String securityAnswer, String password, String confirmPassword)
+	{
+		System.out.println(action + " " + username + " " + password + " " + confirmPassword);
+		if (!password.equals(confirmPassword))
+		{
+			showErrorMessagePanel("Passwords do not match");
+			return;
+		}
+		String hashedPassword = hashPassword(password);
+		if (action.equals("Reset Password")) // TODO implement later at backend
+		{
+			System.out.println("Reset Password");
+			out.println("RESET_PASSWORD|" + username + "|" + hashedPassword + "|" + securityAnswer);
+			String serverResponse = null;
+			try
+			{
+				serverResponse = in.readLine();
+			}
+			catch (IOException e)
+			{
+				System.out.println("Could not read server response: " + e.getMessage());
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("Server response: " + serverResponse);
+			String[] parts = serverResponse.split("\\|");
+			if (parts[0].equals("ERROR"))
+			{
+				showErrorMessagePanel(parts[1]);
+			}
+			else if (parts[0].equals("SUCCESS"))
+			{
+				System.out.println("Password reset successful");
+				showDialogBox("Password reset successful");
+				showLoginPanel();
+			}
+		}
+	}
+
+	@Override
 	public void onActionPerformed(String action, String username)
 	{
 		System.out.println(action + " " + username);

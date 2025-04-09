@@ -17,7 +17,7 @@ CREATE TABLE user (
 -- User Authentication table
 CREATE TABLE user_auth (
     username VARCHAR(25) NOT NULL,
-    password VARCHAR(50) NOT NULL,
+    password VARCHAR(65) NOT NULL,
     security_question VARCHAR(50) NOT NULL,
     security_answer VARCHAR(50) NOT NULL,
     PRIMARY KEY (username),
@@ -81,3 +81,6 @@ ADD CONSTRAINT university_fk
     REFERENCES university(name)
     ON DELETE SET NULL 
     ON UPDATE CASCADE;
+
+-- adding first university
+INSERT INTO university VALUES ('IIITG', 'Guwahati', 0, NULL);
