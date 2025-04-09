@@ -36,7 +36,7 @@ public class LogInPanel extends JPanel
 		JButton logInButton = new JButton("Log In");
 		logInButton.setBounds(300, 300, 100, 30);
 		add(logInButton);
-		logInButton.addActionListener((ActionEvent e) -> actionListener.onActionPerformed("Log In", usernameField.getText(), new String(passwordField.getPassword())));
+		logInButton.addActionListener((ActionEvent e) -> actionListener.onActionPerformed("Log In", usernameField.getText().trim(), new String(passwordField.getPassword()).trim()));
 
 		JButton signUpButton = new JButton("Sign Up");
 		signUpButton.setBounds(450, 300, 100, 30);

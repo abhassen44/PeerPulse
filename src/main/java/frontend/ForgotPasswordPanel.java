@@ -57,6 +57,6 @@ public class ForgotPasswordPanel extends JPanel
 		JButton submitButton = new JButton("Submit");
 		submitButton.setBounds(300, 450, 100, 30);
 		add(submitButton);
-		submitButton.addActionListener((e) -> actionListener.onActionPerformed("Submit", usernameField.getText(), securityAnswerField.getText(), new String(newPasswordField.getPassword()), new String(confirmPasswordField.getPassword())));
+		submitButton.addActionListener((e) -> actionListener.onActionPerformed("Submit", usernameField.getText().trim(), securityAnswerField.getText().trim(), new String(newPasswordField.getPassword()).trim(), new String(confirmPasswordField.getPassword()).trim()));
 	}
 }

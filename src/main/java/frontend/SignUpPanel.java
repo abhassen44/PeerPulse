@@ -97,14 +97,14 @@ public class SignUpPanel extends JPanel
 		add(signUpButton);
 		signUpButton.addActionListener((e) -> actionListener.onActionPerformed(
 			"Sign Up", 
-			usernameField.getText(), 
-			new String(passwordField.getPassword()), 
-			new String(confirmPasswordField.getPassword()),
-			securityQuestionField.getText(), 
-			securityAnswerField.getText(),
-			nameField.getText(),
-			dobField.getText(),
-			universityField.getText(),
+			usernameField.getText().trim(),
+			new String(passwordField.getPassword()).trim(),
+			new String(confirmPasswordField.getPassword()).trim(),
+			securityQuestionField.getText().trim(),
+			securityAnswerField.getText().trim(),
+			nameField.getText().trim(),
+			dobField.getText().trim(),
+			universityField.getText().trim(),
 			(String)sexComboBox.getSelectedItem()
 		));
 
