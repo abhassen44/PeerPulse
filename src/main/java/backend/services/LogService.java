@@ -16,11 +16,11 @@ public class LogService
 		{
 			return "ERROR|No logs found for user: " + username;
 		}
-		String res = "SUCCESS|";
+		StringBuilder res = new StringBuilder("SUCCESS|");
 		for (Log log : list)
 		{
-			res += log.getAction() + "~" + log.getDate() + "|";
+			res.append(log.getAction()).append("~").append(log.getDate()).append("|");
 		}
-		return res;
+		return res.toString();
 	}
 }

@@ -1,6 +1,6 @@
 add university adding page
 
-logs almost done
+logs done // just schema problem, only one log per day
 
 remove vote button
 

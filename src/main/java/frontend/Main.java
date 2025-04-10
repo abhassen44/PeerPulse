@@ -456,9 +456,9 @@ public class Main implements frontend.ActionListener
 								if (parts[i].contains("~"))
 								{
 									String[] logEntry = parts[i].split("~");
-									if (logEntry.length >= 3)
+									if (logEntry.length >= 2)
 									{
-										logs.add(new String[] {logEntry[0], logEntry[1], logEntry[2]});
+										logs.add(new String[] {logEntry[1], logEntry[0]});
 									}
 								}
 							}
