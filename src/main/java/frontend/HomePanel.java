@@ -1,11 +1,23 @@
 package frontend;
 
-import frontend.theme.ModernTheme;
-import frontend.components.ModernButton;
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+import frontend.components.ModernButton;
+import frontend.theme.ModernTheme;
 
 public class HomePanel extends JPanel {
     public HomePanel(ActionListener actionListener, String fetchedUsername, String fetchedName, int upvoteCount) {
@@ -52,11 +64,14 @@ public class HomePanel extends JPanel {
         buttonPanel.setOpaque(false);
 
         // Action Buttons
-        ModernButton viewProfileBtn = new ModernButton("View Profile", ModernTheme.PRIMARY, ModernTheme.PRIMARY_HOVER);
+  ModernButton viewProfileBtn = new ModernButton("View Profile", ModernTheme.PRIMARY, ModernTheme.PRIMARY_HOVER);
         viewProfileBtn.addActionListener(e -> actionListener.onActionPerformed("viewProfile", fetchedUsername));
         
         ModernButton upvoteBtn = new ModernButton("Upvote", ModernTheme.PRIMARY, ModernTheme.PRIMARY_HOVER);
         upvoteBtn.addActionListener(e -> actionListener.onActionPerformed("upvote", fetchedUsername));
+        
+        ModernButton downvoteBtn = new ModernButton("Downvote", ModernTheme.PRIMARY, ModernTheme.PRIMARY_HOVER);
+        downvoteBtn.addActionListener(e -> actionListener.onActionPerformed("downvote", fetchedUsername));
         
         ModernButton nextBtn = new ModernButton("Next Profile", ModernTheme.PRIMARY, ModernTheme.PRIMARY_HOVER);
         nextBtn.addActionListener(e -> actionListener.onActionPerformed("next"));
@@ -69,8 +84,10 @@ public class HomePanel extends JPanel {
         buttonPanel.add(Box.createRigidArea(new Dimension(0, ModernTheme.SPACING)));
         buttonPanel.add(upvoteBtn);
         buttonPanel.add(Box.createRigidArea(new Dimension(0, ModernTheme.SPACING)));
+        buttonPanel.add(downvoteBtn);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, ModernTheme.SPACING)));
         buttonPanel.add(nextBtn);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, ModernTheme.SPACING * 2)));
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, ModernTheme.SPACING )));
         buttonPanel.add(deleteBtn);
 
         profileCard.add(buttonPanel);
