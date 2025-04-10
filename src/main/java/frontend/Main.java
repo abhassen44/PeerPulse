@@ -1,13 +1,14 @@
 package frontend;
 
-import backend.models.User;
-
+import java.util.List;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Date;
 import java.util.UUID;
 
 import java.awt.event.WindowAdapter;
@@ -105,7 +106,7 @@ public class Main implements frontend.ActionListener
 	void showHomePanel()
 	{
 		// Request a random profile from the server
-		out.println("GET_RANDOM_PROFILE");
+		out.println("GET_USER_BY_UNIVERSITY|" + uuid + "|" + currentSessionUserName);
 		String serverResponse = null;
 		try
 		{
@@ -151,6 +152,36 @@ public class Main implements frontend.ActionListener
 	void showDialogBox(String message)
 	{
 		JOptionPane.showMessageDialog(this.displayFrame, message);
+	}
+
+	void showViewProfile(String fetchedUsername, String fetchedName, String fetchedUniversity, Date fetchedDob, Date fetchedDateJoined, int upvoteCount, char fetchedSex)
+	{
+		// Clear the frame contents properly
+		displayFrame.getContentPane().removeAll();
+
+		// Create the panel
+		ViewProfilePanel viewProfilePanel = new ViewProfilePanel(
+				this,  // assuming 'this' implements ActionListener
+				fetchedUsername,
+				fetchedName,
+				fetchedUniversity,
+				fetchedDob,
+				fetchedDateJoined,
+				upvoteCount,
+				fetchedSex
+		);
+
+		// Set a preferred size if needed
+		viewProfilePanel.setPreferredSize(new Dimension(displayFrame.getWidth(), displayFrame.getHeight()));
+
+		// Add the panel to the frame
+		displayFrame.add(viewProfilePanel);
+
+		// Make sure to call these in this order
+		displayFrame.pack();
+		displayFrame.revalidate();
+		displayFrame.repaint();
+		displayFrame.setVisible(true);  // Ensure the frame is visible
 	}
 
 	private String hashPassword(String password)
@@ -212,7 +243,7 @@ public class Main implements frontend.ActionListener
 		{
 			System.out.println("deleteAccount");
 			showDialogBox("Do you want to delete your account?");
-			out.println("DELETE_ACCOUNT|" + currentSessionUserName + currentHashedPassword);
+			out.println("DELETE_ACCOUNT|" + uuid + "|" + currentSessionUserName + "|" + currentHashedPassword);
 			String serverResponse = null;
 			try
 			{
@@ -292,6 +323,165 @@ public class Main implements frontend.ActionListener
 				}
 			}
 		}
+		else if (action.equals("viewMyProfile"))
+		{
+			System.out.println("viewMyProfile");
+
+			// Move profile view operation to a background thread
+			new Thread(() ->
+			{
+				// Request the current user's profile data
+				out.println("GET_PROFILE|" + uuid + "|" + currentSessionUserName + "|" + currentSessionUserName);
+				try
+				{
+					final String serverResponse = in.readLine();
+
+					SwingUtilities.invokeLater(() ->
+					{
+						System.out.println("Server response: " + serverResponse);
+						String[] parts = serverResponse.split("\\|");
+						if (parts[0].equals("ERROR"))
+						{
+							showErrorMessagePanel(parts[1]);
+							return;
+						}
+
+						try
+						{
+							// Make sure we have enough parts
+							if (parts.length < 7) {
+								showErrorMessagePanel("Incomplete profile data received");
+								return;
+							}
+
+							String fetchedUsername = parts[1];
+							String fetchedName = parts[2];
+
+							// Parse DOB
+							Date fetchedDob = null;
+							try
+							{
+								fetchedDob = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(parts[3]);
+							}
+							catch (Exception e)
+							{
+								System.out.println("Error parsing DOB: " + e.getMessage());
+							}
+
+							String fetchedUniversity = parts[4];
+
+							// Parse upvote count
+							int upvoteCount = 0;
+							try
+							{
+								upvoteCount = Integer.parseInt(parts[5]);
+							}
+							catch (NumberFormatException e)
+							{
+								System.out.println("Error parsing upvote count: " + e.getMessage());
+							}
+
+							// Parse sex
+							char fetchedSex = 'U'; // Default if parsing fails
+							if (parts[6].length() > 0)
+							{
+								fetchedSex = parts[6].charAt(0);
+							}
+
+							// Parse date joined
+							Date fetchedDateJoined = null;
+							if (parts.length > 7)
+							{
+								try
+								{
+									fetchedDateJoined = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(parts[7]);
+								}
+								catch (Exception e)
+								{
+									System.out.println("Error parsing date joined: " + e.getMessage());
+								}
+							}
+
+							// Show the ViewMyProfile panel
+							showViewMyProfile(fetchedUsername, fetchedName, fetchedUniversity,
+									fetchedDob, fetchedDateJoined, upvoteCount, fetchedSex);
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+							showErrorMessagePanel("Error processing profile data: " + e.getMessage());
+						}
+					});
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					SwingUtilities.invokeLater(() ->
+													   showErrorMessagePanel("Connection error while fetching profile")
+					);
+				}
+			}).start();
+		}
+		else if (action.equals("viewLogs"))
+		{
+			System.out.println("viewLogs");
+
+			// Move log fetching operation to a background thread
+			new Thread(() ->
+			{
+				// Request user logs from the server
+				out.println("GET_LOGS|" + uuid + "|" + currentSessionUserName);
+				try
+				{
+					final String serverResponse = in.readLine();
+
+					SwingUtilities.invokeLater(() ->
+					{
+						System.out.println("Server response: " + serverResponse);
+						String[] parts = serverResponse.split("\\|");
+						if (parts[0].equals("ERROR"))
+						{
+							showErrorMessagePanel(parts[1]);
+							return;
+						}
+
+						try
+						{
+							// Process log entries
+							List<String[]> logs = new java.util.ArrayList<>();
+
+							// Start from index 1 to skip the SUCCESS part
+							for (int i = 1; i < parts.length; i++)
+							{
+								if (parts[i].contains("~"))
+								{
+									String[] logEntry = parts[i].split("~");
+									if (logEntry.length >= 2)
+									{
+										logs.add(new String[] {logEntry[1], logEntry[0]});
+									}
+								}
+							}
+
+							// Show logs panel
+							showLogsPanel(logs);
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+							showErrorMessagePanel("Error processing logs data: " + e.getMessage());
+						}
+					});
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					SwingUtilities.invokeLater(() ->
+													   showErrorMessagePanel("Connection error while fetching logs")
+					);
+				}
+			}).start();
+		}
 		else
 		{
 			System.out.println("Unknown action: " + action);
@@ -302,38 +492,40 @@ public class Main implements frontend.ActionListener
 	public void onActionPerformed(String action, String username, String password)
 	{
 		System.out.println(action + " " + username + " " + password);
-		String hashedPassword = hashPassword(password);
-		System.out.println("Hashed Password: " + hashedPassword);
-
 		if (action.equals("Log In"))
 		{
 			System.out.println("Log In");
-			// validate username and password
-
-			out.println("LOGIN|" + username + "|" + hashedPassword);
+			String hashedPassword = hashPassword(password);
+			System.out.println("Hashed Password: " + hashedPassword);
+			performLogin(username, hashedPassword);
+		}
+		else if (action.equals("deleteProfile"))
+		{
+			System.out.println("deleteProfile");
+			showDialogBox("Do you want to delete your account?");
+			out.println("DELETE_ACCOUNT|" + uuid + "|" + currentSessionUserName + "|" + currentHashedPassword);
 			String serverResponse = null;
 			try
 			{
 				serverResponse = in.readLine();
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
+				System.out.println("Could not read server response: " + e.getMessage());
 				e.printStackTrace();
+				System.exit(1);
 			}
 			System.out.println("Server response: " + serverResponse);
 			String[] parts = serverResponse.split("\\|");
-
 			if (parts[0].equals("ERROR"))
 			{
 				showErrorMessagePanel(parts[1]);
 			}
 			else if (parts[0].equals("SUCCESS"))
 			{
-				System.out.println("Login successful");
-				currentSessionUserName = username;
-				currentHashedPassword = hashedPassword;
-				uuid = UUID.fromString(parts[2]);
-				showHomePanel();
+				System.out.println("Account deleted successfully");
+				showDialogBox("Account deleted successfully");
+				showLoginPanel(); // Redirect to login page
 			}
 		}
 	}
@@ -353,9 +545,38 @@ public class Main implements frontend.ActionListener
 				return;
 			}
 
-			out.println("REGISTER|" + username + "|" + hashedPassword + "|" + name + "|" + dob + "|" + university + "|" + sex + "|" + securityQuestion + "|" + securityAnswer);
+			// Move signup network operation to a background thread
+			new Thread(() ->
+			{
+				out.println("REGISTER|" + username + "|" + hashedPassword + "|" + name + "|" + dob + "|" + university + "|" + sex + "|" + securityQuestion + "|" + securityAnswer);
 
-			showLoginPanel();
+				try
+				{
+					// Wait for server response
+					final String serverResponse = in.readLine();
+
+					// Update UI on EDT
+					SwingUtilities.invokeLater(() ->
+					{
+						String[] parts = serverResponse.split("\\|");
+						if (parts[0].equals("ERROR"))
+						{
+							showErrorMessagePanel(parts[1]);
+						}
+						else if (parts[0].equals("SUCCESS"))
+						{
+							showDialogBox("Registration successful! Please login.");
+							showLoginPanel();
+						}
+					});
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					SwingUtilities.invokeLater(() ->
+													   showErrorMessagePanel("Connection error during registration"));
+				}
+			}).start();
 		}
 	}
 
@@ -406,78 +627,119 @@ public class Main implements frontend.ActionListener
 
 		if (action.equals("viewProfile"))
 		{
-			System.out.println("viewProfile");
+			System.out.println("viewProfile" + " " + username);
+
+			// Move profile view operation to a background thread
+			new Thread(() ->
+			{
+				out.println("GET_PROFILE|" + uuid + "|" + currentSessionUserName + "|" + username);
+				try
+				{
+					final String serverResponse = in.readLine();
+
+					SwingUtilities.invokeLater(() ->
+					{
+						System.out.println("Server response: " + serverResponse);
+						String[] parts = serverResponse.split("\\|");
+						if (parts[0].equals("ERROR"))
+						{
+							showErrorMessagePanel(parts[1]);
+							return;
+						}
+
+						try
+						{
+							// Make sure we have enough parts
+							if (parts.length < 7) {
+								showErrorMessagePanel("Incomplete profile data received");
+								return;
+							}
+
+							String fetchedUsername = parts[1];
+							String fetchedName = parts[2];
+
+							// Parse DOB
+							Date fetchedDob = null;
+							try
+							{
+								fetchedDob = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(parts[3]);
+							}
+							catch (Exception e)
+							{
+								System.out.println("Error parsing DOB: " + e.getMessage());
+							}
+
+							String fetchedUniversity = parts[4];
+
+							// Parse upvote count
+							int upvoteCount = 0;
+							try
+							{
+								upvoteCount = Integer.parseInt(parts[5]);
+							}
+							catch (NumberFormatException e)
+							{
+								System.out.println("Error parsing upvote count: " + e.getMessage());
+							}
+
+							// Parse sex
+							char fetchedSex = 'U'; // Default if parsing fails
+							if (parts[6].length() > 0)
+							{
+								fetchedSex = parts[6].charAt(0);
+							}
+
+							// Parse date joined
+							Date fetchedDateJoined = null;
+							if (parts.length > 7)
+							{
+								try
+								{
+									fetchedDateJoined = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(parts[7]);
+								}
+								catch (Exception e)
+								{
+									System.out.println("Error parsing date joined: " + e.getMessage());
+								}
+							}
+
+							// Debug information
+							System.out.println("Creating ViewProfilePanel with:");
+							System.out.println("Username: " + fetchedUsername);
+							System.out.println("Name: " + fetchedName);
+							System.out.println("University: " + fetchedUniversity);
+							System.out.println("DOB: " + fetchedDob);
+							System.out.println("Date Joined: " + fetchedDateJoined);
+							System.out.println("Upvotes: " + upvoteCount);
+							System.out.println("Sex: " + fetchedSex);
+
+							showViewProfile(fetchedUsername, fetchedName, fetchedUniversity, fetchedDob, fetchedDateJoined, upvoteCount, fetchedSex);
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+							showErrorMessagePanel("Error processing profile data: " + e.getMessage());
+						}
+					});
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					SwingUtilities.invokeLater(() ->
+													   showErrorMessagePanel("Connection error while fetching profile")
+					);
+				}
+			}).start();
 		}
 		else if (action.equals("upvote"))
 		{
 			System.out.println("upvote");
-			out.println("UPVOTE|" + uuid + "|" + currentSessionUserName + "|" + username);
-			String serverResponse = null;
-			try
-			{
-				serverResponse = in.readLine();
-			}
-			catch (IOException e)
-			{
-				System.out.println("Could not read server response: " + e.getMessage());
-				e.printStackTrace();
-				System.exit(1);
-			}
-			System.out.println("Server response: " + serverResponse);
-			String[] parts = serverResponse.split("\\|");
-			if (parts[0].equals("ERROR"))
-			{
-				// Check if the error is due to upvoting oneself
-				if (parts[1].equals("Cannot upvote yourself") || parts[1].equals("Already upvoted"))
-				{
-					showDialogBox(parts[1]); // Show the error in a dialog box
-				} else
-				{
-					showErrorMessagePanel(parts[1]); // Redirect to login for other errors
-				}
-			}
-			else if (parts[0].equals("SUCCESS"))
-			{
-				System.out.println("Upvote successful");
-				showDialogBox("Upvote successful");
-				showHomePanel(); // Refresh with next profile
-			}
+			handleVote("UPVOTE", username);
 		}
 		else if (action.equals("downvote"))
 		{
 			System.out.println("downvote");
-			out.println("DOWNVOTE|" + uuid + "|" + currentSessionUserName + "|" + username);
-			String serverResponse = null;
-			try
-			{
-				serverResponse = in.readLine();
-			}
-			catch (IOException e)
-			{
-				System.out.println("Could not read server response: " + e.getMessage());
-				e.printStackTrace();
-				System.exit(1);
-			}
-			System.out.println("Server response: " + serverResponse);
-			String[] parts = serverResponse.split("\\|");
-			if (parts[0].equals("ERROR"))
-			{
-				// Check if the error is due to downvoting oneself
-				if (parts[1].equals("Cannot downvote yourself") || parts[1].equals("Already downvoted"))
-				{
-					showDialogBox(parts[1]); // Show the error in a dialog box
-				}
-				else
-				{
-					showErrorMessagePanel(parts[1]); // Redirect to login for other errors
-				}
-			}
-			else if (parts[0].equals("SUCCESS"))
-			{
-				System.out.println("Downvote successful");
-				showDialogBox("Downvote successful");
-				showHomePanel(); // Refresh with next profile
-			}
+			handleVote("DOWNVOTE", username);
 		}
 		else if (action.equals("next"))
 		{
@@ -488,7 +750,7 @@ public class Main implements frontend.ActionListener
 		{
 			System.out.println("deleteAccount");
 			showDialogBox("Do you want to delete your account?");
-			out.println("DELETE_ACCOUNT|" + currentSessionUserName + currentHashedPassword);
+			out.println("DELETE_ACCOUNT|" + uuid + "|" + currentSessionUserName + "|" + currentHashedPassword);
 			String serverResponse = null;
 			try
 			{
@@ -551,5 +813,195 @@ public class Main implements frontend.ActionListener
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void performLogin(String username, String hashedPassword)
+	{
+		// Create a new thread for network operations
+		new Thread(() ->
+		{
+			out.println("LOGIN|" + username + "|" + hashedPassword);
+			try
+			{
+				final String serverResponse = in.readLine();
+
+				// Update UI on the EDT using SwingUtilities.invokeLater
+				SwingUtilities.invokeLater(() ->
+				{
+					String[] parts = serverResponse.split("\\|");
+					if (parts[0].equals("ERROR"))
+					{
+						showErrorMessagePanel(parts[1]);
+					}
+					else if (parts[0].equals("SUCCESS"))
+					{
+						currentSessionUserName = username;
+						currentHashedPassword = hashedPassword;
+						uuid = UUID.fromString(parts[2]);
+
+						// Call to load home panel also in a separate thread
+						loadHomePanel();
+					}
+				});
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				SwingUtilities.invokeLater(() ->
+												   showErrorMessagePanel("Connection error"));
+			}
+		}).start();
+	}
+
+	private void loadHomePanel()
+	{
+		new Thread(() ->
+		{
+			out.println("GET_RANDOM_PROFILE");
+			try
+			{
+				final String serverResponse = in.readLine();
+
+				SwingUtilities.invokeLater(() ->
+				{
+					String[] parts = serverResponse.split("\\|");
+					if (parts[0].equals("ERROR"))
+					{
+						showErrorMessagePanel(parts[1]);
+						return;
+					}
+
+					String fetchedUsername = parts[1];
+					String fetchedName = parts[2];
+					int upvoteCount = 0;
+
+					if (parts.length > 5)
+					{
+						try
+						{
+							upvoteCount = Integer.parseInt(parts[5]);
+						}
+						catch (NumberFormatException e)
+						{
+							System.out.println("Error parsing upvote count: " + e.getMessage());
+						}
+					}
+
+					displayFrame.getContentPane().removeAll();
+					displayFrame.revalidate();
+					HomePanel homePanel = new HomePanel(Main.this, fetchedUsername, fetchedName, upvoteCount);
+					displayFrame.add(homePanel);
+					displayFrame.revalidate();
+					displayFrame.repaint();
+				});
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				SwingUtilities.invokeLater(() ->
+												   showErrorMessagePanel("Connection error"));
+			}
+		}).start();
+	}
+
+	private void handleVote(String voteType, String username)
+	{
+		System.out.println("Sending " + voteType + " for user " + username);
+
+		new Thread(() ->
+		{
+			// Debug the command being sent
+			String command = voteType + "|" + uuid + "|" + currentSessionUserName + "|" + username;
+			System.out.println("Sending command: " + command);
+
+			out.println(command);
+			try
+			{
+				final String serverResponse = in.readLine();
+				System.out.println("Raw server response: " + serverResponse);
+
+				if (serverResponse == null) {
+					SwingUtilities.invokeLater(() ->
+													   showErrorMessagePanel("No response from server. Server may be down.")
+					);
+					return;
+				}
+
+				SwingUtilities.invokeLater(() ->
+				{
+					String[] parts = serverResponse.split("\\|");
+					if (parts[0].equals("ERROR"))
+					{
+						showDialogBox(parts[1]);
+					}
+					else if (parts[0].equals("SUCCESS"))
+					{
+						showDialogBox(voteType + " successful");
+
+						// Load a new profile after successful vote
+						loadHomePanel();
+					}
+				});
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				SwingUtilities.invokeLater(() ->
+												   showErrorMessagePanel("Connection error during " + voteType.toLowerCase())
+				);
+			}
+		}).start();
+	}
+
+	private void showViewMyProfile(String fetchedUsername, String fetchedName, String fetchedUniversity,
+								   Date fetchedDob, Date fetchedDateJoined, int upvoteCount, char fetchedSex)
+	{
+		// Clear the frame contents properly
+		displayFrame.getContentPane().removeAll();
+
+		// Create the panel
+		ViewMyProfile viewMyProfilePanel = new ViewMyProfile(
+				this,  // 'this' implements ActionListener
+				fetchedUsername,
+				fetchedName,
+				fetchedUniversity,
+				fetchedDob,
+				fetchedDateJoined,
+				upvoteCount,
+				fetchedSex
+		);
+
+		// Set a preferred size if needed
+		viewMyProfilePanel.setPreferredSize(new Dimension(displayFrame.getWidth(), displayFrame.getHeight()));
+
+		// Add the panel to the frame
+		displayFrame.add(viewMyProfilePanel);
+
+		// Make sure to call these in this order
+		displayFrame.pack();
+		displayFrame.revalidate();
+		displayFrame.repaint();
+		displayFrame.setVisible(true);  // Ensure the frame is visible
+	}
+
+	private void showLogsPanel(List<String[]> logs)
+	{
+		// Clear the frame contents properly
+		displayFrame.getContentPane().removeAll();
+
+		// Create the logs panel
+		LogsPanel logsPanel = new LogsPanel(this, logs);
+
+		// Set a preferred size if needed
+		logsPanel.setPreferredSize(new Dimension(displayFrame.getWidth(), displayFrame.getHeight()));
+
+		// Add the panel to the frame
+		displayFrame.add(logsPanel);
+
+		// Make sure to call these in this order
+		displayFrame.pack();
+		displayFrame.revalidate();
+		displayFrame.repaint();
+		displayFrame.setVisible(true);
 	}
 }

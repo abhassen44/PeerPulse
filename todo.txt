@@ -1,1 +1,7 @@
-complete json prompt
+add university adding page
+
+logs done // just schema problem, only one log per day
+
+remove vote button
+
+resolve images at last

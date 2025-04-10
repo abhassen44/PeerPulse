@@ -1,6 +1,7 @@
 package backend.services;
 
 import backend.DAO.TransactionsDAO;
+import backend.DAO.UniversityDAO;
 import backend.DAO.UserAuthDAO;
 import backend.DAO.UserDAO;
 import backend.models.Transactions;
@@ -60,98 +61,6 @@ public class UserService
 			System.err.println("Error registering user: " + e.getMessage());
 			e.printStackTrace();
 			return "ERROR|Registration failed";
-		}
-	}
-
-	public String upvote(String sender, String receiver)
-	{
-		if (!userDAO.isUserNameExists(sender))
-		{
-			return "ERROR|Sender does not exist";
-		}
-		if (!userDAO.isUserNameExists(receiver))
-		{
-			return "ERROR|Receiver does not exist";
-		}
-
-		try
-		{
-			if (sender.equals(receiver))
-			{
-				return "ERROR|Cannot upvote yourself";
-			}
-			if (!transactionsDAO.hasTransaction(sender, receiver))
-			{
-				userDAO.updateLikes(receiver, 1);
-				transactionsDAO.insert(new Transactions(sender, receiver, 1, new Date()));
-			}
-			else
-			{
-				Transactions t = transactionsDAO.findTransaction(sender, receiver);
-				if (t.getAmount() == 1)
-				{
-					return "ERROR|Already upvoted";
-				}
-				else if (t.getAmount() == -1)
-				{
-					userDAO.updateLikes(receiver, 2);
-					t.setAmount(t.getAmount() + 2);
-					t.setDate(new Date());
-					transactionsDAO.update(t);
-				}
-			}
-			return "SUCCESS|Upvote recorded";
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			return "ERROR|Upvote failed";
-		}
-	}
-
-	public String downvote(String sender, String receiver)
-	{
-		if (!userDAO.isUserNameExists(sender))
-		{
-			return "ERROR|Sender does not exist";
-		}
-		if (!userDAO.isUserNameExists(receiver))
-		{
-			return "ERROR|Receiver does not exist";
-		}
-
-		try
-		{
-			if (sender.equals(receiver))
-			{
-				return "ERROR|Cannot downvote yourself";
-			}
-			if (!transactionsDAO.hasTransaction(sender, receiver))
-			{
-				userDAO.updateLikes(receiver, -1);
-				transactionsDAO.insert(new Transactions(sender, receiver, -1, new Date()));
-			}
-			else
-			{
-				Transactions t = transactionsDAO.findTransaction(sender, receiver);
-				if (t.getAmount() == -1)
-				{
-					return "ERROR|Already downvoted";
-				}
-				else if (t.getAmount() == 1)
-				{
-					userDAO.updateLikes(receiver, -2);
-					t.setAmount(t.getAmount() - 2);
-					t.setDate(new Date());
-					transactionsDAO.update(t);
-				}
-			}
-			return "SUCCESS|Downvote recorded";
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			return "ERROR|Downvote failed";
 		}
 	}
 
@@ -223,10 +132,19 @@ public class UserService
 			}
 			university = user.getUniversity();
 
+			UniversityDAO universityDAO = new UniversityDAO();
+			if (universityDAO.findByName(university) == null)
+			{
+				return "ERROR|University not found";
+			}
 			user = userDAO.getRandomUserByUniversity(university);
 			if (user == null)
 			{
 				return "ERROR|No user found for the specified university";
+			}
+			else if (user.getUsername().equals(username) && universityDAO.findByName(university).getStudents() >= 1)
+			{
+				return this.getRandomUserSameUniversity(username);
 			}
 
 			return String.join("|",
