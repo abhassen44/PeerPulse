@@ -66,7 +66,7 @@ public class LogDAO
 
 	public List<Log> findByUsername(String username)
 	{
-		String sql = "SELECT * FROM log WHERE username = ?";
+		String sql = "SELECT * FROM log WHERE username = ? ORDER BY date DESC LIMIT 10";
 		List<Log> logs = new ArrayList<>();
 
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))

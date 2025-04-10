@@ -1,1 +1,7 @@
-complete json prompt
+add university adding page
+
+logs almost done
+
+remove vote button
+
+resolve images at last

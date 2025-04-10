@@ -290,7 +290,7 @@ public class UserDAO
 		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql))
 		{
 			stmt.setString(1, university);
-			ResultSet rs = stmt.executeQuery(sql);
+			ResultSet rs = stmt.executeQuery();
 
 			if (rs.next())
 			{

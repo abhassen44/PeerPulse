@@ -39,7 +39,7 @@ public class HomePanel extends JPanel
 		// Create button panel with vertical BoxLayout
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-		
+
 		// Add buttons with proper spacing
 		JButton viewProfileButton = new JButton("View Profile");
 		viewProfileButton.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -47,7 +47,22 @@ public class HomePanel extends JPanel
 		viewProfileButton.addActionListener(e -> actionListener.onActionPerformed("viewProfile", fetchedUsername));
 		buttonPanel.add(viewProfileButton);
 		buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-		
+
+		// Add the new "View My Profile" button
+//		JButton viewMyProfileButton = new JButton("View My Profile");
+//		viewMyProfileButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+//		viewMyProfileButton.setMaximumSize(new Dimension(150, 30));
+//		viewMyProfileButton.addActionListener(e -> actionListener.onActionPerformed("viewMyProfile", fetchedUsername));
+//		buttonPanel.add(viewMyProfileButton);
+//		buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+		JButton viewMyProfileButton = new JButton("View My Profile");
+		viewMyProfileButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+		viewMyProfileButton.setMaximumSize(new Dimension(150, 30));
+		viewMyProfileButton.addActionListener(e -> actionListener.onActionPerformed("viewMyProfile"));
+		buttonPanel.add(viewMyProfileButton);
+		buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
 		JButton upvoteButton = new JButton("Upvote");
 		upvoteButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 		upvoteButton.setMaximumSize(new Dimension(150, 30));
